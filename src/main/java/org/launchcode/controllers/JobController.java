@@ -1,5 +1,6 @@
 package org.launchcode.controllers;
 
+import org.launchcode.models.*;
 import org.launchcode.models.forms.JobForm;
 import org.launchcode.models.data.JobData;
 import org.springframework.stereotype.Controller;
@@ -23,8 +24,7 @@ public class JobController {
     @RequestMapping(value = "", method = RequestMethod.GET)
     public String index(Model model, int id) {
 
-        // TODO #1 - get the Job with the given ID and pass it into the view
-
+        model.addAttribute("job", jobData.findById(id));
         return "job-detail";
     }
 
@@ -41,7 +41,24 @@ public class JobController {
         // new Job and add it to the jobData data store. Then
         // redirect to the job detail view for the new Job.
 
-        return "";
+        if (errors.hasErrors()) {
+            model.addAttribute("errors", errors);
+            //It's so cool that I don't have to add jobForm to the model again! :^)
+            return "new-job";
+        } else {
+            JobData jobdata = JobData.getInstance();
+
+            Employer anEmployer = jobdata.getEmployers().findById(jobForm.getEmployerId());
+            Location aLocation = jobdata.getLocations().findById(jobForm.getLocationId());
+            CoreCompetency aCoreCompetency = jobdata.getCoreCompetencies().findById(jobForm.getSkillId());
+            PositionType aPositionType = jobdata.getPositionTypes().findById(jobForm.getPositionTypeId());
+            String aName = jobForm.getName();
+
+            Job newJob = new Job(aName, anEmployer, aLocation, aPositionType, aCoreCompetency);
+            jobdata.add(newJob);
+
+            return "redirect:?id=" + newJob.getId();
+        }
 
     }
 }
